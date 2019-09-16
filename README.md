@@ -38,3 +38,9 @@ This will start three local processes running synchronous distributed training.
 ## Run it on Gradient 
 
 [WIP]
+
+Command to launch it on kubernetes
+
+--docker-image horovod-0.15.0-cpu-py36-tf1.11.0 \
+--ps-docker-image horovod-0.15.0-cpu-py36-tf1.11.0 \
+--command "mpirun --allow-run-as-root -np 3 --hostfile /kube-openmpi/generated/hostfile -bind-to none -map-by slot -mca pml ob1 -mca btl ^openib python openmpi/horovod/main.py" \
