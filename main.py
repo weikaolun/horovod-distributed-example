@@ -66,11 +66,8 @@ def parse_args():
 
     # Parse args
     opts = parser.parse_args()
-    opts.data_dir = get_data_path(dataset_name='*/*',
-                                  local_root=opts.local_data_root,
-                                  local_repo='',
-                                  path=opts.data_subpath)
-    opts.log_dir = get_logs_path(root=opts.local_log_root)
+    opts.data_dir = os.path.abspath(os.environ.get('PS_JOBSPACE', os.getcwd()) + '/data')
+    opts.log_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/mnist')
 
     opts.hidden_units = [int(n) for n in opts.hidden_units.split(',')]
 
