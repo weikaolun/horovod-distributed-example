@@ -146,7 +146,7 @@ def main(opts):
     config.gpu_options.visible_device_list = str(hvd.local_rank())
 
     runconfig = tf.estimator.RunConfig(
-        model_dir=opts.log_dir if hvd.rank() == 0 else None,
+        model_dir=opts.log_dir,
         save_summary_steps=opts.save_summary_steps,
         save_checkpoints_steps=opts.ckpt_steps,
         keep_checkpoint_max=opts.max_ckpts,
