@@ -19,7 +19,6 @@ FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, FILE_DIR)
 
 
-
 def parse_args():
     """Parse arguments"""
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
@@ -188,8 +187,8 @@ def cnn_model_fn(features, labels, mode):
     return tf.estimator.EstimatorSpec(
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
-def run_mnist(flags_obj, train_data, train_labels, eval_data, eval_labels):
 
+def run_mnist(flags_obj, train_data, train_labels, eval_data, eval_labels):
     # Horovod: pin GPU to be used to process local rank (one GPU per process)
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
