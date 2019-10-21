@@ -72,7 +72,7 @@ def parse_args():
     opts = parser.parse_args()
     opts.data_dir = os.path.abspath(os.environ.get('PS_JOBSPACE', os.getcwd()) + '/data')
     opts.log_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/mnist')
-
+    opts.export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
     opts.hidden_units = [int(n) for n in opts.hidden_units.split(',')]
 
     return opts
@@ -279,10 +279,7 @@ def main(args):
     # features between 0 and 1.
     train_data = np.reshape(train_data, (-1, 784)) / 255.0
     eval_data = np.reshape(eval_data, (-1, 784)) / 255.0
-
-    eval_results = run_mnist(args, train_data, train_labels, eval_data, eval_labels)
-
-    print(eval_results)
+    run_mnist(args, train_data, train_labels, eval_data, eval_labels)
 
 
 if __name__ == "__main__":
