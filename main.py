@@ -24,48 +24,20 @@ def parse_args():
     parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter,
                             description='''Train a convolution neural network with MNIST dataset.
                             For distributed mode, you must run this with mpirun. See README.md''')
-
-    # Experiment related parameters
-    parser.add_argument('--local_data_root', type=str, default=os.path.join(FILE_DIR, 'data'),
-                        help='Path to dataset. This path will be /data on Gradient.')
-    parser.add_argument('--local_log_root', type=str, default=os.path.join(FILE_DIR, 'logs'),
-                        help='Path to store logs and checkpoints. This path will be /logs on Gradient.')
-    parser.add_argument('--data_subpath', type=str, default='',
-                        help='Which sub-directory the data will sit inside local_data_root (locally) ' +
-                             'or /data/ (on Gradient).')
-
-    # CNN model params
-    parser.add_argument('--kernel_size', type=int, default=3,
-                        help='Size of the CNN kernels to use.')
-    parser.add_argument('--hidden_units', type=str, default='32,64',
-                        help='Comma-separated list of integers. Number of hidden units to use in CNN model.')
-    parser.add_argument('--learning_rate', type=float, default=0.01,
-                        help='Initial learning rate used in Adam optimizer.')
-    parser.add_argument('--learning_decay', type=float, default=0.0001,
-                        help='Exponential decay rate of the learning rate per step.')
-    parser.add_argument('--dropout', type=float, default=0.5,
-                        help='Dropout rate used after each convolutional layer.')
-    parser.add_argument('--batch_size', type=int, default=512,
-                        help='Batch size to use during training and evaluation.')
-
     # Training params
     parser.add_argument('--verbosity', type=str, default='INFO', choices=['CRITICAL', 'ERROR', 'WARN', 'INFO', 'DEBUG'],
                         help='TF logging level. To see intermediate results printed, set this to INFO or DEBUG.')
-    parser.add_argument('--fashion', action='store_true',
-                        help='Download and use fashion MNIST data instead of the default handwritten digit MNIST.')
-    parser.add_argument('--parallel_batches', type=int, default=2,
-                        help='Number of parallel batches to prepare in data pipeline.')
     parser.add_argument('--max_ckpts', type=int, default=2,
                         help='Maximum number of checkpoints to keep.')
     parser.add_argument('--ckpt_steps', type=int, default=100,
                         help='How frequently to save a model checkpoint.')
-    parser.add_argument('--save_summary_steps', type=int, default=10,
+    parser.add_argument('--save_summary_steps', type=int, default=100,
                         help='How frequently to save TensorBoard summaries.')
-    parser.add_argument('--log_step_count_steps', type=int, default=10,
+    parser.add_argument('--log_step_count_steps', type=int, default=100,
                         help='How frequently to log loss & global steps/s.')
     parser.add_argument('--eval_steps', type=int, default=100,
                         help='How frequently to run evaluation step.')
-    parser.add_argument('--max_steps', type=int, default=1000000,
+    parser.add_argument('--max_steps', type=int, default=500,
                         help='Maximum number of steps to run.')
 
     # Parse args
@@ -73,16 +45,15 @@ def parse_args():
     opts.data_dir = os.path.abspath(os.environ.get('PS_JOBSPACE', os.getcwd()) + '/data')
     opts.log_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/mnist')
     opts.export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
-    opts.hidden_units = [int(n) for n in opts.hidden_units.split(',')]
 
     return opts
 
-
-def cnn_model_fn(features, labels, mode):
+def cnn_model_fn(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
     # Reshape X to 4-D tensor: [batch_size, width, height, channels]
     # MNIST images are 28x28 pixels, and have one color channel
+
     input_layer = tf.reshape(features["x"], [-1, 28, 28, 1])
 
     # Convolutional Layer #1
@@ -202,7 +173,13 @@ def run_mnist(flags_obj, train_data, train_labels, eval_data, eval_labels):
     mnist_classifier = tf.estimator.Estimator(
         model_fn=cnn_model_fn,
         model_dir=model_dir,
-        config=tf.estimator.RunConfig(session_config=config))
+        config=tf.estimator.RunConfig(
+            session_config=config,
+            save_checkpoints_steps=flags_obj.ckpt_steps,
+            keep_checkpoint_max=flags_obj.max_ckpts,
+            save_summary_steps=flags_obj.save_summary_steps,
+            log_step_count_steps=flags_obj.log_step_count_steps
+        ))
 
     # Set up logging for predictions
     # Log the values in the "Softmax" tensor with label "probabilities"
@@ -227,7 +204,8 @@ def run_mnist(flags_obj, train_data, train_labels, eval_data, eval_labels):
     # Horovod: adjust number of steps based on number of GPUs.
     mnist_classifier.train(
         input_fn=train_input_fn,
-        steps=20000 // hvd.size(),
+        #steps=20000 // hvd.size(),
+        max_steps=flags_obj.max_steps,
         hooks=[logging_hook, bcast_hook])
 
     # Evaluate the model and print results
@@ -244,8 +222,7 @@ def run_mnist(flags_obj, train_data, train_labels, eval_data, eval_labels):
         input_fn = tf.estimator.export.build_raw_serving_input_receiver_fn({
             'image': image,
         })
-        mnist_classifier.export_savedmodel(flags_obj.export_dir, input_fn,
-                                           strip_default_attrs=True)
+        mnist_classifier.export_saved_model(flags_obj.export_dir, input_fn)
         tf.logging.debug('Model Exported')
 
     return eval_results
