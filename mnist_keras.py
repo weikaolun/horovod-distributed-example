@@ -26,7 +26,7 @@ batch_size = 128
 num_classes = 10
 
 model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
-
+export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 # Horovod: adjust number of epochs based on number of GPUs.
 epochs = int(math.ceil(12.0 / hvd.size()))
 
@@ -112,7 +112,7 @@ if hvd.rank() == 0:
     # and stored with the default serving key
 
     version = 1
-    export_path = os.path.join(model_dir, str(version))
+    export_path = os.path.join(export_dir, str(version))
     print('export_path = {}\n'.format(export_path))
 
     tf.saved_model.simple_save(
