@@ -28,7 +28,7 @@ num_classes = 10
 model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
 export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 # Horovod: adjust number of epochs based on number of GPUs.
-epochs = int(int(math.ceil(os.getenv('TRAIN_EPOCHS', 12.0)) / hvd.size()))
+epochs = int(math.ceil(int(os.getenv('TRAIN_EPOCHS', 12.0)) / hvd.size()))
 
 # Input image dimensions
 img_rows, img_cols = 28, 28
