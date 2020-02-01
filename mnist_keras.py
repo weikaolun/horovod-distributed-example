@@ -22,13 +22,13 @@ config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = str(hvd.local_rank())
 K.set_session(tf.Session(config=config))
 
-batch_size = 128
+batch_size = os.getenv('BATCH_SIZE', 128)
 num_classes = 10
 
 model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
 export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 # Horovod: adjust number of epochs based on number of GPUs.
-epochs = int(math.ceil(12.0 / hvd.size()))
+epochs = int(math.ceil(os.getenv('EPOCHS', 12.0) / hvd.size()))
 
 # Input image dimensions
 img_rows, img_cols = 28, 28
