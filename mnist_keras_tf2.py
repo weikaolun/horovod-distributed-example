@@ -83,7 +83,7 @@ callbacks = [
 
 # Horovod: save checkpoints only on worker 0 to prevent other workers from corrupting them.
 if hvd.rank() == 0:
-    save_model_callback = LambdaCallback(
+    save_model_callback = tf.keras.callbacks.LambdaCallback(
       on_train_end=lambda logs: [
           model.save(export_dir, save_format='tf')])
 
