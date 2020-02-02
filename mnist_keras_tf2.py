@@ -16,6 +16,8 @@
 import tensorflow as tf
 import horovod.tensorflow.keras as hvd
 
+import os
+
 # Horovod: initialize Horovod.
 hvd.init()
 
