@@ -87,7 +87,7 @@ if hvd.rank() == 0:
       on_train_end=lambda logs: [
           model.save(export_dir, save_format='tf')])
 
-    callbacks.append(tf.keras.callbacks.ModelCheckpoint(export_dir + '/checkpoints/checkpoint-{epoch}.h5'))
+    callbacks.append(tf.keras.callbacks.ModelCheckpoint(export_dir + '/checkpoint-{epoch}.h5'))
     callbacks.append(save_model_callback)
 
 # Horovod: write logs on worker 0.
