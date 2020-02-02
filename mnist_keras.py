@@ -115,9 +115,12 @@ if hvd.rank() == 0:
     export_path = os.path.join(export_dir, str(version))
     print('export_path = {}\n'.format(export_path))
 
-    tf.saved_model.simple_save(
-        keras.backend.get_session(),
-        export_path,
-        inputs={'image': model.input},
-        outputs={t.name:t for t in model.outputs})
+#     tf.saved_model.simple_save(
+#         keras.backend.get_session(),
+#         export_path,
+#         inputs={'image': model.input},
+#         outputs={t.name:t for t in model.outputs})
+    
+    model.save(export_path, save_format='tf')
+    
     print('\nSaved model:')
