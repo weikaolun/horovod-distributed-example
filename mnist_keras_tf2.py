@@ -85,7 +85,7 @@ callbacks = [
 if hvd.rank() == 0:
     save_model_callback = tf.keras.callbacks.LambdaCallback(
       on_train_end=lambda logs: [
-          model.save(export_dir, save_format='tf')])
+          mnist_model.save(export_dir, save_format='tf')])
 
     callbacks.append(tf.keras.callbacks.ModelCheckpoint(export_dir + '/checkpoint-{epoch}.h5'))
     callbacks.append(save_model_callback)
