@@ -1,17 +1,21 @@
 from __future__ import print_function
 
-import math
 import os
 
+import keras
+from keras.datasets import mnist
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+from keras import backend as K
+import math
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.layers import Conv2D, MaxPooling2D
-from tensorflow.keras import backend as K
+import horovod.keras as hvd
 
-import horovod.tensorflow.keras as hvd
+
+# Gradient Path setup
+model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
+export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 
 # Horovod: initialize Horovod.
 hvd.init()
@@ -25,8 +29,6 @@ K.set_session(tf.Session(config=config))
 batch_size = 128
 num_classes = 10
 
-model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
-export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 # Horovod: adjust number of epochs based on number of GPUs.
 epochs = int(math.ceil(12.0 / hvd.size()))
 
@@ -99,25 +101,5 @@ model.fit(x_train, y_train,
           verbose=1 if hvd.rank() == 0 else 0,
           validation_data=(x_test, y_test))
 score = model.evaluate(x_test, y_test, verbose=0)
-
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
-
-
-if hvd.rank() == 0:
-    print('export model')
-
-    # Fetch the Keras session and save the model
-    # The signature definition is defined by the input and output tensors,
-    # and stored with the default serving key
-
-    version = 1
-    export_path = os.path.join(export_dir, str(version))
-    print('export_path = {}\n'.format(export_path))
-
-    tf.saved_model.simple_save(
-        keras.backend.get_session(),
-        export_path,
-        inputs={'image': model.input},
-        outputs={t.name:t for t in model.outputs})
-    print('\nSaved model:')
