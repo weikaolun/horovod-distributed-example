@@ -8,6 +8,12 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras import backend as K
+
+from keras.models import Sequential, Model, load_model
+from tensorflow.python.saved_model import tag_constants, signature_constants
+from tensorflow.python.saved_model import builder as saved_model_builder
+from tensorflow.python.saved_model.signature_def_utils_impl import build_signature_def, predict_signature_def
+
 import math
 import tensorflow as tf
 import horovod.keras as hvd
@@ -104,9 +110,30 @@ score = model.evaluate(x_test, y_test, verbose=0)
 # Export the model to a SavedModel
 
 if hvd.rank() == 0:
-    export_model_path = os.path.join(export_dir, 'keras-sample-model.h5')
-    model.save(export_model_path, save_format='tf')
-    print("Model saved to {}".format(export_model_path))
-    
+    # Export Model
+    exported_model_path = os.path.join(export_dir, 'keras-sample-model.h5')
+    model.save(exported_model_path)
+    print("Model saved to {}".format(exported_model_path))
+
+    K.set_learning_phase(0)
+
+    new_model = load_model(exported_model_path)
+
+    builder = saved_model_builder.SavedModelBuilder(os.path.join(export_dir))
+    signature = predict_signature_def(
+        inputs={'input': new_model.input},
+        outputs={'prob': new_model.output})
+
+    with K.get_session() as sess:
+        builder.add_meta_graph_and_variables(
+            sess=sess,
+            tags=[tag_constants.SERVING],
+            clear_devices=True,
+            signature_def_map={
+                signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: signature}
+        )
+
+    builder.save()
+
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
