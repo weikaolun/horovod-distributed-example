@@ -101,5 +101,12 @@ model.fit(x_train, y_train,
           verbose=1 if hvd.rank() == 0 else 0,
           validation_data=(x_test, y_test))
 score = model.evaluate(x_test, y_test, verbose=0)
+# Export the model to a SavedModel
+
+if hvd.rank() == 0:
+    export_model_path = os.path.join(export_dir, 'keras-sample-model.h5')
+    model.save(export_model_path, save_format='tf')
+    print("Model saved to {}".format(export_model_path))
+    
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
