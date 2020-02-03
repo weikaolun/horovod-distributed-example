@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import os
+import time
 
 import keras
 from keras.datasets import mnist
@@ -111,7 +112,7 @@ score = model.evaluate(x_test, y_test, verbose=0)
 
 if hvd.rank() == 0:
     # Export Model
-    exported_model_path = os.path.join(export_dir, 'keras-sample-model.h5')
+    exported_model_path = os.path.join(model_dir, 'keras-sample-model.h5')
     model.save(exported_model_path)
     print("Model saved to {}".format(exported_model_path))
 
@@ -119,7 +120,7 @@ if hvd.rank() == 0:
 
     new_model = load_model(exported_model_path)
 
-    builder = saved_model_builder.SavedModelBuilder(os.path.join(export_dir))
+    builder = saved_model_builder.SavedModelBuilder(os.path.join(export_dir, time.strftime("%Y%m%d-%H%M%S")))
     signature = predict_signature_def(
         inputs={'input': new_model.input},
         outputs={'prob': new_model.output})
