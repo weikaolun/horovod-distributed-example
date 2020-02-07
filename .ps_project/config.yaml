@@ -1,0 +1,18 @@
+version: 2
+workflows:
+  hvd-multinode:
+    steps:
+      - name: "horovod-keras-mnist"
+        command: experiment.run_mpi_multi_node
+        paramsFile: .ps_project/distributed-keras-sample.yaml
+    checks: #[optional]
+        tensorflow:loss:
+            target: "0.0..0.3"
+            aggregate: "mean"
+    triggers:
+        branches:
+            only: .*
+        tags:
+            only:
+            - v.*
+            - latest
