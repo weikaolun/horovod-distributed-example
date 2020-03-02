@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import math
 import os
+import socket
 
 import tensorflow as tf
 from tensorflow import keras
@@ -28,7 +29,7 @@ num_classes = 10
 model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
 export_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models'))
 # Horovod: adjust number of epochs based on number of GPUs.
-epochs = int(math.ceil(12.0 / hvd.size()))
+epochs = int(math.ceil(2.0 / hvd.size()))
 
 # Input image dimensions
 img_rows, img_cols = 28, 28
@@ -69,6 +70,12 @@ model.add(Dense(128, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='softmax'))
 
+print('hostname', socket.gethostname())
+print('rank:', hvd.rank())
+print('size:', hvd.size())
+for a in os.environ:
+	print(a, os.getenv(a))
+
 # Horovod: adjust learning rate based on number of GPUs.
 opt = keras.optimizers.Adadelta(1.0 * hvd.size())
 
@@ -77,8 +84,7 @@ opt = hvd.DistributedOptimizer(opt)
 
 model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=opt,
-              metrics=['accuracy'],
-              use_multiprocessing=False)
+              metrics=['accuracy'])
 
 callbacks = [
     # Horovod: broadcast initial variable states from rank 0 to all other processes.
@@ -97,7 +103,7 @@ model.fit(x_train, y_train,
           batch_size=batch_size,
           callbacks=callbacks,
           epochs=epochs,
-          verbose=1 if hvd.rank() == 0 else 0,
+          verbose=1, #if hvd.rank() == 0 else 0,
           validation_data=(x_test, y_test))
 score = model.evaluate(x_test, y_test, verbose=0)
 
