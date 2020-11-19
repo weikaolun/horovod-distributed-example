@@ -5,7 +5,7 @@ workerCommand: sleep infinity
 workerCount: 3
 masterContainer: horovod/horovod:0.18.1-tf1.14.0-torch1.2.0-mxnet1.5.0-py3.6
 masterMachineType: P4000
-masterCommand: mpirun --allow-run-as-root -np 1 --hostfile /generated/hostfile  -bind-to none -map-by slot  -x NCCL_DEBUG=INFO -mca pml ob1 -mca btl ^openib python keras_mnist.py
+masterCommand: mpirun --allow-run-as-root -np 1 --hostfile /generated/hostfile  -bind-to none -map-by slot  -x NCCL_DEBUG=INFO -mca pml ob1 -mca btl ^openib python mnist_keras.py
 masterCount: 1
 modelType: Tensorflow
 clusterId : cl9ez0c8g
