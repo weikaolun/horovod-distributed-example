@@ -1,3 +1,4 @@
-tensorflow==1.13.1
+tensorflow==1.15
 horovod==0.18.1
 gradient
+git+git://github.com/Paperspace/gradient-utils.git@colin/cr2-82-create-new-init-function-in-metrics#egg=gradient-utils

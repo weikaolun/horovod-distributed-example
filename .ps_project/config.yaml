@@ -11,8 +11,4 @@ workflows:
             aggregate: "mean"
     triggers:
         branches:
-            only: .*
-        tags:
-            only:
-            - v.*
-            - latest
+            only: master

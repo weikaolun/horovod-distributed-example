@@ -19,6 +19,8 @@ import math
 import tensorflow as tf
 import horovod.keras as hvd
 
+from gradient_utils import metrics
+metrics.init(sync_tensorboard=True)
 
 # Gradient Path setup
 model_dir = os.path.abspath(os.environ.get('PS_MODEL_PATH', os.getcwd() + '/models') + '/horovod-mnist')
